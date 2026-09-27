@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+ 
+# Jupyter
+.ipynb_checkpoints/
+ 
+# LaTeX build artefacts
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+ 
+# Data caches (the notebook downloads its own data)
+*.csv
+*.pkl
+data/
+ 
+# OS
+.DS_Store
+Thumbs.db
+ 
