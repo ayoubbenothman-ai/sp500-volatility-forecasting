@@ -4,7 +4,7 @@ Comparison of naive persistence, a HAR-style regression, GARCH and ML Regression
 S&P 500 index 21-days ahead.
 
 **[Full technical note (PDF)](volatility_forecasting_note.pdf)** ·
-**[Notebook](sp500_volatility_forecasting.ipynb)**
+**[Notebook](sp500-volatility-forecasting.ipynb)**
 
 ## Question
 
