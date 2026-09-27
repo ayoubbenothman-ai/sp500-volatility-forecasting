@@ -13,7 +13,7 @@ volatility relatively to persistence and classical volatility models
 at a 21-trading-day horizon?
 
 The target at date *t* is the annualized standard deviation of the **next** 21
-daily log returns. Predictors use returns up to *t* only.
+daily log returns. Predictors use returns up to *t* only, so no data leakage.
 
 ## Evaluation design
 
@@ -50,7 +50,7 @@ naive persistence ($R^2_{\text{vs naive}} = -0.015$). Conversely, SVR and OLS
 have the lowest RMSE and the highest $R^2$, but QLIKE values close to
 persistence (SVR is in fact the worst of the five on this metric). All five models have almost the same correlation with realized
 volatility (0.58--0.60): they contain similar information and differ mainly in
-the \emph{level and asymmetry} of their errors.
+the level and asymmetry of their errors.
 
 ![Forecast vs realized volatility](realized-ols-garch.png)
 
