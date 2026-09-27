@@ -3,8 +3,8 @@
 Comparison of naive persistence, a HAR-style regression, GARCH and ML Regression Models (LR & SVR) for forecasting the realized volatility of the
 S&P 500 index 21-days ahead.
 
-**[Full technical note (PDF)](report/vol_forecasting_note.pdf)** ·
-**[Notebook](notebooks/sp500_volatility_forecasting.ipynb)**
+**[Full technical note (PDF)](volatility_forecasting_note.pdf)** ·
+**[Notebook](sp500_volatility_forecasting.ipynb)**
 
 ## Question
 
