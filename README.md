@@ -52,7 +52,7 @@ persistence (SVR is in fact the worst of the five on this metric). All five mode
 volatility (0.58--0.60): they contain similar information and differ mainly in
 the \emph{level and asymmetry} of their errors.
 
-![Forecast vs realized volatility](figures/forecast_vs_realized.png)
+![Forecast vs realized volatility](figures/realized-ols-garch.png)
 
 ## Running it
 
