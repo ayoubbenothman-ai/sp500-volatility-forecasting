@@ -45,11 +45,6 @@ Daily conditional variance of returns, fitted by maximum likelihood:
 r_t = \sigma_t z_t, \quad z_t \sim \mathcal{N}(0,1), \qquad \sigma_t^2 = \omega + \alpha r_{t-1}^2 + \beta \sigma_{t-1}^2
 ```
 
-with $`\omega > 0`$, $`\alpha, \beta \ge 0`$, $`\alpha + \beta < 1`$. Forecasts revert to the long-run variance $`\bar\sigma^2 = \omega/(1-\alpha-\beta)`$:
-
-```math
-\mathbb{E}_t[\sigma^2_{t+h}] = \bar\sigma^2 + (\alpha+\beta)^{h-1}(\sigma^2_{t+1} - \bar\sigma^2)
-```
 
 The 21-day forecast sums the daily variances and annualizes:
 
@@ -73,31 +68,23 @@ $`\beta`$ minimizes the sum of squared errors. Features are standardized on the 
 | `P/SMA_50` | $`P_t / \mathrm{mean}(P_{t-49},\dots,P_t)`$ | Same over about 2.5 months: medium-term trend |
 | `RSI14` | $`100 - 100/(1 + U/D)`$, with U, D the average up and down moves over 14 days | Momentum from 0 to 100: low means recent selling pressure |
 
-The trend features capture the **leverage effect**: volatility tends to rise after prices fall. That is why they are negatively correlated with the target (−0.42 for `P/SMA_20`, −0.51 for `P/SMA_50`).
+**leverage effect**: volatility tends to rise after prices fall. That is why they are negatively correlated with the target (−0.42 for `P/SMA_20`, −0.51 for `P/SMA_50`).
 
 ### 5. Support Vector Regression (linear kernel, C = 10, ε = 0.01)
-Same linear prediction as OLS, $`\hat\sigma_t = w^\top x_t + b`$, but a different fitting criterion:
+Same linear prediction as OLS, $`\hat\sigma_t = w^\top x_t + b`$, but errors smaller than epsilon are ignored and errors penalized linearly (so less sensitive to extreme dates)
 
 ```math
 \min_{w,b} \frac{1}{2}\lVert w \rVert^2 + C \sum_t \max\left(0, \lvert RV_t - w^\top x_t - b \rvert - \varepsilon\right)
 ```
 
-- Errors smaller than ε are ignored.
-- Larger errors are penalized linearly, not squared, so the fit is less sensitive to extreme dates.
-- The term ½‖w‖² is a Ridge-type penalty; C trades off fit against simplicity.
 
 ## Evaluation design
 
-Two properties of the target drive the design: it is a noisy proxy for latent
-volatility, and consecutive targets overlap by 20 of their 21 returns.
 
 - **Walk-forward, expanding window.** The model is refitted every 21 trading days
   and predicts the following block.
 - **21-day embargo.** Training stops 21 days before the forecast origin, so no
   training target overlaps the test block.
-- **Selection / test split.** Forecasts before `SPLIT="2017-01-11"` are used for diagnostics
-  and hyperparameter choice. The later period is used once, for the results below.
-- **Non-overlapping scoring.** Only the first forecast of each block is kept.
 - **QLIKE on variances** as the primary loss, alongside RMSE, R² and R² relative
   to the naive and HAR benchmarks.
 
@@ -117,7 +104,7 @@ volatility, and consecutive targets overlap by 20 of their 21 returns.
 
 **The ranking depends on the loss.**
 GARCH(1,1) has the lowest QLIKE, yet its squared error is essentially that of
-naive persistence ($R^2_{\text{vs naive}} = -0.015$). Conversely, SVR and OLS
+naive persistence. Conversely, SVR and OLS
 have the lowest RMSE and the highest $R^2$, but QLIKE values close to
 persistence (SVR is in fact the worst of the five on this metric). All five models have almost the same correlation with realized
 volatility (0.58--0.60): they contain similar information and differ mainly in
@@ -134,9 +121,6 @@ pip install -r requirements.txt
 jupyter lab notebooks/sp500_volatility_forecasting.ipynb
 ```
 
-The notebook downloads its own data from Yahoo Finance, so no data files are
-included. Runtime is a approximately 5 minutes. The SVR hyperparameter search is the slowest
-section.
 
 ## Limitations
 - From 2017-01-11 to 2023-10-16 is about 6.76 years, roughly 1,703 trading days at 252 per year, and 1703 / 21 ≈ 81. 81 forecasts is maybe too few to evaluate models.
