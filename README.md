@@ -14,6 +14,77 @@ at a 21-trading-day horizon?
 
 The target at date *t* is the annualized standard deviation of the **next** 21
 daily log returns. Predictors use returns up to *t* only, so no data leakage.
+## Models
+
+**Notation.** $`r_t = \ln(P_t/P_{t-1})`$ is the daily log return. All forecasts target the annualized volatility of the next 21 daily returns:
+
+```math
+RV_{t+1:t+21} = \sqrt{252} \cdot \mathrm{sd}(r_{t+1},\dots,r_{t+21})
+```
+
+### 1. Naive persistence
+Next month's volatility equals last month's:
+
+```math
+\hat\sigma_t = RV21_t = \sqrt{252} \cdot \mathrm{sd}(r_{t-20},\dots,r_t)
+```
+
+### 2. HAR-style regression
+Linear regression on volatility at three horizons (day, week, month), fitted by OLS:
+
+```math
+RV_{t+1:t+21} = \alpha_0 + \alpha_1 \sigma^{(1)}_t + \alpha_2 \sigma^{(5)}_t + \alpha_3 RV21_t + \varepsilon_t
+```
+
+with $`\sigma^{(1)}_t = \sqrt{252} \lvert r_t \rvert`$ and $`\sigma^{(5)}_t`$ its 5-day average.
+
+### 3. GARCH(1,1)
+Daily conditional variance of returns, fitted by maximum likelihood:
+
+```math
+r_t = \sigma_t z_t, \quad z_t \sim \mathcal{N}(0,1), \qquad \sigma_t^2 = \omega + \alpha r_{t-1}^2 + \beta \sigma_{t-1}^2
+```
+
+with $`\omega > 0`$, $`\alpha, \beta \ge 0`$, $`\alpha + \beta < 1`$. Forecasts revert to the long-run variance $`\bar\sigma^2 = \omega/(1-\alpha-\beta)`$:
+
+```math
+\mathbb{E}_t[\sigma^2_{t+h}] = \bar\sigma^2 + (\alpha+\beta)^{h-1}(\sigma^2_{t+1} - \bar\sigma^2)
+```
+
+The 21-day forecast sums the daily variances and annualizes:
+
+```math
+\hat\sigma_t = \sqrt{\frac{252}{21} \sum_{h=1}^{21} \mathbb{E}_t[\sigma^2_{t+h}]}
+```
+
+### 4. Linear regression (OLS)
+
+```math
+RV_{t+1:t+21} = \beta_0 + \beta^\top x_t + \varepsilon_t
+```
+
+$`\beta`$ minimizes the sum of squared errors. Features are standardized on the training sample only.
+
+| Feature | Definition | Intuition |
+|---|---|---|
+| `RV21` | $`\sqrt{252} \cdot \mathrm{sd}(r_{t-20},\dots,r_t)`$ | Current monthly volatility; volatility is persistent |
+| `LAG1`, `LAG5`, `LAG21` | RV21 one day, one week and one month ago | Whether volatility is rising or falling, and how fast it decays |
+| `P/SMA_20` | $`P_t / \mathrm{mean}(P_{t-19},\dots,P_t)`$ | Price vs. its 1-month average: below 1 means a recent drop |
+| `P/SMA_50` | $`P_t / \mathrm{mean}(P_{t-49},\dots,P_t)`$ | Same over about 2.5 months: medium-term trend |
+| `RSI14` | $`100 - 100/(1 + U/D)`$, with U, D the average up and down moves over 14 days | Momentum from 0 to 100: low means recent selling pressure |
+
+The trend features capture the **leverage effect**: volatility tends to rise after prices fall. That is why they are negatively correlated with the target (−0.42 for `P/SMA_20`, −0.51 for `P/SMA_50`).
+
+### 5. Support Vector Regression (linear kernel, C = 10, ε = 0.01)
+Same linear prediction as OLS, $`\hat\sigma_t = w^\top x_t + b`$, but a different fitting criterion:
+
+```math
+\min_{w,b} \frac{1}{2}\lVert w \rVert^2 + C \sum_t \max\left(0, \lvert RV_t - w^\top x_t - b \rvert - \varepsilon\right)
+```
+
+- Errors smaller than ε are ignored.
+- Larger errors are penalized linearly, not squared, so the fit is less sensitive to extreme dates.
+- The term ½‖w‖² is a Ridge-type penalty; C trades off fit against simplicity.
 
 ## Evaluation design
 
