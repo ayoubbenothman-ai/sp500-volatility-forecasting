@@ -87,6 +87,8 @@ Same linear prediction as OLS, $`\hat\sigma_t = w^\top x_t + b`$, but errors sma
   training target overlaps the test block.
 - **QLIKE on variances** as the primary loss, alongside RMSE, R² and R² relative
   to the naive and HAR benchmarks.
+  $$\text{QLIKE}_t = x_t - \ln x_t - 1 \ \ge 0 \quad $$
+  with $x_t = RV_t^2 / \hat\sigma_t^2$.
 
 ## Results
 
